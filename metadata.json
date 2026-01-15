@@ -1,0 +1,5 @@
+{
+  "name": "韓國旅遊分帳趣 🇰🇷",
+  "description": "A split-bill application for travelers in Korea, featuring currency conversion and automatic debt settlement calculation.",
+  "requestFramePermissions": []
+}
