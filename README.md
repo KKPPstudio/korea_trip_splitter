@@ -1,20 +1,53 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# 韓國旅遊分帳趣 🇰🇷
 
-# Run and deploy your AI Studio app
+這是一個專為韓國旅遊設計的分帳 Web App，支援匯率換算、多人分帳、記帳功能。
 
-This contains everything you need to run your app locally.
+## 功能特色
+- 👥 多人分帳管理
+- 💱 即時匯率換算
+- 📝 消費紀錄與分類
+- 💰 自動計算結算金額
+- 📱 RWD 響應式設計 (手機/電腦皆可使用)
 
-View your app in AI Studio: https://ai.studio/apps/drive/1iOXw_Y0wuDVWZQElZsfLkAP1ltJ_L-SD
+## 快速開始
 
-## Run Locally
+### 前置需求
+- Node.js (v18 或以上)
+- npm (v9 或以上)
 
-**Prerequisites:**  Node.js
+### 安裝與執行
 
+1. **安裝依賴套件**
+   ```bash
+   npm install
+   ```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+2. **啟動開發伺服器**
+   ```bash
+   npm run dev
+   ```
+   啟動後，開啟瀏覽器訪問 `http://localhost:5173` 即可使用。
+
+### 建置與部署
+
+1. **建置生產版本**
+   ```bash
+   npm run build
+   ```
+   建置完成的檔案將位於 `dist` 資料夾中。
+
+2. **部署上線**
+   本專案已設定 GitHub Actions，將程式碼推送到 GitHub 的 `main` 分支後，即會自動觸發部署流程至 GitHub Pages。
+   
+   請確保 GitHub Repository 的 Settings > Pages 中，Source 設定為 `GitHub Actions`。
+
+## 技術堆疊
+- **Frontend**: React, TypeScript, Vite
+- **Styling**: Tailwind CSS, Lucide React
+- **Backend/State**: Firebase (Firestore)
+
+## 專案結構
+- `/components`: UI 元件
+- `/utils`: 工具函式
+- `firebaseConfig.ts`: Firebase 設定檔
+- `types.ts`: TypeScript 型別定義

@@ -17,7 +17,7 @@ export const PayerSummaryCard: React.FC<PayerSummaryCardProps> = ({ expenses, ra
     return acc;
   }, {} as Record<string, number>);
 
-  const sortedPayers = Object.entries(summary).sort(([, a], [, b]) => b - a);
+  const sortedPayers = Object.entries(summary).sort(([, a], [, b]) => (b as number) - (a as number));
 
   if (expenses.length === 0) return null;
 
@@ -41,7 +41,7 @@ export const PayerSummaryCard: React.FC<PayerSummaryCardProps> = ({ expenses, ra
             return (
               <div key={idx} className="bg-white border border-gray-100 rounded-lg shadow-sm overflow-hidden transition-all">
                 {/* Summary Row */}
-                <div 
+                <div
                   onClick={() => toggleExpand(name)}
                   className="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-50 active:bg-gray-100"
                 >
@@ -57,7 +57,7 @@ export const PayerSummaryCard: React.FC<PayerSummaryCardProps> = ({ expenses, ra
                       已墊 {amount.toLocaleString()} ₩
                     </div>
                     <div className="text-[10px] text-gray-400">
-                      ≈ {Math.round(amount / rate).toLocaleString()} TWD
+                      ≈ {Math.round((amount as number) / rate).toLocaleString()} TWD
                     </div>
                   </div>
                 </div>
@@ -65,13 +65,13 @@ export const PayerSummaryCard: React.FC<PayerSummaryCardProps> = ({ expenses, ra
                 {/* Expanded Details */}
                 {isExpanded && (
                   <div className="bg-gray-50 border-t border-gray-100 px-3 py-2 space-y-2 animate-fade-in">
-                    
+
                     {/* Prominent Total Display */}
                     <div className="mb-3 bg-orange-100/50 p-3 rounded-lg border border-orange-100 flex justify-between items-center">
                       <span className="text-sm text-orange-800 font-bold">總代墊金額</span>
                       <div className="text-right">
                         <div className="text-xl font-bold text-orange-600">{amount.toLocaleString()} ₩</div>
-                        <div className="text-xs text-orange-400">≈ {Math.round(amount / rate).toLocaleString()} TWD</div>
+                        <div className="text-xs text-orange-400">≈ {Math.round((amount as number) / rate).toLocaleString()} TWD</div>
                       </div>
                     </div>
 
@@ -85,13 +85,13 @@ export const PayerSummaryCard: React.FC<PayerSummaryCardProps> = ({ expenses, ra
                         <div className="flex items-center gap-3">
                           <span className="font-medium text-orange-600">{ex.amount.toLocaleString()} ₩</span>
                           <div className="flex gap-1 border-l pl-2 border-gray-100">
-                            <button 
+                            <button
                               onClick={(e) => { e.stopPropagation(); onEdit(ex); }}
                               className="p-1.5 text-blue-400 hover:bg-blue-50 rounded"
                             >
                               <Pencil className="w-3.5 h-3.5" />
                             </button>
-                            <button 
+                            <button
                               onClick={(e) => { e.stopPropagation(); onDelete(ex.id); }}
                               className="p-1.5 text-red-400 hover:bg-red-50 rounded"
                             >
