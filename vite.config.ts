@@ -14,6 +14,7 @@ export default defineConfig(({ mode }) => {
       alias: {
         '@': path.resolve(__dirname, '.'),
       }
-    }
+    },
+    base: '/korea_trip_splitter/',
   };
 });
