@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Receipt, Check, ArrowRightLeft } from 'lucide-react';
 import { Expense } from '../types';
+import { SplitSelector } from './SplitSelector';
 
 interface AddExpenseFormProps {
   friends: string[];
@@ -20,22 +21,6 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ friends, rate, o
   React.useEffect(() => {
     setSplitBy(friends);
   }, [friends]);
-
-  const toggleSplitFriend = (name: string) => {
-    if (splitBy.includes(name)) {
-      setSplitBy(splitBy.filter(f => f !== name));
-    } else {
-      setSplitBy([...splitBy, name]);
-    }
-  };
-
-  const toggleAllSplit = () => {
-    if (splitBy.length === friends.length) {
-      setSplitBy([]);
-    } else {
-      setSplitBy(friends);
-    }
-  };
 
   const handleSubmit = () => {
     if (!payer) {
@@ -66,7 +51,7 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ friends, rate, o
       originalAmount: numAmount,          // User input
       currency: currency,
       item: item.trim(),
-      splitBy: splitBy.length === friends.length ? undefined : splitBy, // If all, undefined (save space), else specific list
+      ...(splitBy.length < friends.length && splitBy.length > 0 ? { splitBy } : {}), // Only include if not all selected
     });
 
     setAmount('');
@@ -96,34 +81,12 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ friends, rate, o
           </select>
         </div>
 
-        <div>
-          <div className="flex justify-between items-center mb-1.5">
-            <label className="block text-xs font-medium text-gray-500">誰要分攤？</label>
-            <button
-              onClick={toggleAllSplit}
-              className="text-xs text-kr-blue hover:text-blue-700 font-medium px-1"
-            >
-              {splitBy.length === friends.length ? '取消全選' : '全選'}
-            </button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {friends.map(f => {
-              const isSelected = splitBy.includes(f);
-              return (
-                <button
-                  key={f}
-                  onClick={() => toggleSplitFriend(f)}
-                  className={`px-3 py-1.5 rounded-lg text-sm border transition-all flex items-center gap-1 ${isSelected
-                      ? 'bg-green-50 border-green-200 text-green-700 font-medium'
-                      : 'bg-gray-50 border-gray-200 text-gray-400'
-                    }`}
-                >
-                  {f} {isSelected && <Check className="w-3 h-3" />}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        {/* Shared Split Selector Component */}
+        <SplitSelector
+          friends={friends}
+          selectedSplitters={splitBy}
+          onChange={setSplitBy}
+        />
 
         <div className="flex flex-col md:flex-row gap-3">
           <div className="flex-1 md:w-7/12">
@@ -131,12 +94,14 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ friends, rate, o
               金額
               <div className="flex bg-gray-100 rounded p-0.5">
                 <button
+                  type="button"
                   onClick={() => setCurrency('KRW')}
                   className={`px-2 py-0.5 rounded text-[10px] transition-all ${currency === 'KRW' ? 'bg-white shadow-sm text-blue-600 font-bold' : 'text-gray-400 hover:text-gray-600'}`}
                 >
                   KRW
                 </button>
                 <button
+                  type="button"
                   onClick={() => setCurrency('TWD')}
                   className={`px-2 py-0.5 rounded text-[10px] transition-all ${currency === 'TWD' ? 'bg-white shadow-sm text-blue-600 font-bold' : 'text-gray-400 hover:text-gray-600'}`}
                 >
@@ -183,6 +148,7 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ friends, rate, o
         )}
 
         <button
+          type="button"
           onClick={handleSubmit}
           className="w-full py-3 bg-kr-blue hover:bg-blue-800 text-white rounded-lg font-medium shadow-md shadow-blue-200 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
         >

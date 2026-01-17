@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Check, X, ArrowRightLeft } from 'lucide-react';
 import { Expense } from '../types';
+import { SplitSelector } from './SplitSelector';
 
 interface EditExpenseModalProps {
   expense: Expense;
@@ -15,11 +16,8 @@ export const EditExpenseModal: React.FC<EditExpenseModalProps> = ({ expense, fri
   const [item, setItem] = useState(expense.item);
   const [date, setDate] = useState(expense.date);
 
-  // New fields for currency support
   const [currency, setCurrency] = useState<'KRW' | 'TWD'>(expense.currency || 'KRW');
   const [inputAmount, setInputAmount] = useState((expense.originalAmount || expense.amount).toString());
-
-  // Split logic
   const [splitBy, setSplitBy] = useState<string[]>([]);
 
   useEffect(() => {
@@ -29,31 +27,12 @@ export const EditExpenseModal: React.FC<EditExpenseModalProps> = ({ expense, fri
     setCurrency(expense.currency || 'KRW');
     setInputAmount((expense.originalAmount || expense.amount).toString());
 
-    // Initialize splitBy: if undefined or empty in expense, it implies ALL friends were selected at creation time.
-    // However, for editing, we want to show the current state.
-    // Ideally, we should sync this with how AddExpenseForm works.
     if (expense.splitBy && expense.splitBy.length > 0) {
       setSplitBy(expense.splitBy);
     } else {
-      setSplitBy(friends); // Default to all if not specified (legacy or full split)
-    }
-  }, [expense, friends]);
-
-  const toggleSplitFriend = (name: string) => {
-    if (splitBy.includes(name)) {
-      setSplitBy(splitBy.filter(f => f !== name));
-    } else {
-      setSplitBy([...splitBy, name]);
-    }
-  };
-
-  const toggleAllSplit = () => {
-    if (splitBy.length === friends.length) {
-      setSplitBy([]);
-    } else {
       setSplitBy(friends);
     }
-  };
+  }, [expense, friends]);
 
   const handleSubmit = () => {
     const numAmount = parseFloat(inputAmount);
@@ -65,7 +44,6 @@ export const EditExpenseModal: React.FC<EditExpenseModalProps> = ({ expense, fri
       return;
     }
 
-    // Recalculate standardized amount based on current rate if TWD
     const finalKrwAmount = currency === 'TWD' ? numAmount * rate : numAmount;
 
     onSave({
@@ -76,16 +54,16 @@ export const EditExpenseModal: React.FC<EditExpenseModalProps> = ({ expense, fri
       currency: currency,
       item: item.trim(),
       date: date.trim(),
-      splitBy: splitBy.length === friends.length ? undefined : splitBy,
+      ...(splitBy.length < friends.length && splitBy.length > 0 ? { splitBy } : {}), // Only include if not all selected
     });
   };
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-in max-h-[90vh] overflow-y-auto custom-scrollbar">
-        <div className="bg-gray-50 border-b border-gray-100 p-4 flex justify-between items-center sticky top-0 bg-gray-50 z-10">
+        <div className="bg-gray-50 border-b border-gray-100 p-4 flex justify-between items-center sticky top-0 z-10">
           <h3 className="font-bold text-gray-700">編輯消費紀錄</h3>
-          <button onClick={onCancel} className="text-gray-400 hover:text-gray-600">
+          <button onClick={onCancel} className="text-gray-400 hover:text-gray-600 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -104,46 +82,26 @@ export const EditExpenseModal: React.FC<EditExpenseModalProps> = ({ expense, fri
             </select>
           </div>
 
-          <div>
-            <div className="flex justify-between items-center mb-1.5">
-              <label className="block text-xs font-medium text-gray-500">誰要分攤？</label>
-              <button
-                onClick={toggleAllSplit}
-                className="text-xs text-kr-blue hover:text-blue-700 font-medium px-1"
-              >
-                {splitBy.length === friends.length ? '取消全選' : '全選'}
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {friends.map(f => {
-                const isSelected = splitBy.includes(f);
-                return (
-                  <button
-                    key={f}
-                    onClick={() => toggleSplitFriend(f)}
-                    className={`px-3 py-1.5 rounded-lg text-sm border transition-all flex items-center gap-1 ${isSelected
-                        ? 'bg-green-50 border-green-200 text-green-700 font-medium'
-                        : 'bg-gray-50 border-gray-200 text-gray-400'
-                      }`}
-                  >
-                    {f} {isSelected && <Check className="w-3 h-3" />}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          {/* Shared Split Selector Component */}
+          <SplitSelector
+            friends={friends}
+            selectedSplitters={splitBy}
+            onChange={setSplitBy}
+          />
 
           <div>
             <label className="flex justify-between items-center text-xs font-medium text-gray-500 mb-1.5">
               金額
               <div className="flex bg-gray-100 rounded p-0.5">
                 <button
+                  type="button"
                   onClick={() => setCurrency('KRW')}
                   className={`px-1.5 py-0.5 rounded text-[10px] transition-all ${currency === 'KRW' ? 'bg-white shadow text-blue-600 font-bold' : 'text-gray-400'}`}
                 >
                   KRW
                 </button>
                 <button
+                  type="button"
                   onClick={() => setCurrency('TWD')}
                   className={`px-1.5 py-0.5 rounded text-[10px] transition-all ${currency === 'TWD' ? 'bg-white shadow text-blue-600 font-bold' : 'text-gray-400'}`}
                 >
@@ -162,7 +120,6 @@ export const EditExpenseModal: React.FC<EditExpenseModalProps> = ({ expense, fri
                 {currency}
               </div>
             </div>
-            {/* Currency Conversion Preview */}
             {inputAmount && (
               <div className="text-xs text-gray-400 text-right mt-1 flex items-center justify-end gap-1">
                 <ArrowRightLeft className="w-3 h-3" />
@@ -198,12 +155,14 @@ export const EditExpenseModal: React.FC<EditExpenseModalProps> = ({ expense, fri
 
           <div className="pt-2 flex gap-3">
             <button
+              type="button"
               onClick={onCancel}
               className="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-lg font-medium hover:bg-gray-200 transition-colors"
             >
               取消
             </button>
             <button
+              type="button"
               onClick={handleSubmit}
               className="flex-1 py-2.5 bg-kr-blue text-white rounded-lg font-medium hover:bg-blue-800 transition-colors flex items-center justify-center gap-2"
             >
