@@ -6,6 +6,7 @@ export interface Expense {
   currency: 'KRW' | 'TWD'; // 原始幣別
   item: string;
   date: string;
+  splitBy?: string[]; // 誰要分攤這筆 (若無此欄位則預設為全員分攤)
 }
 
 export interface Transfer {

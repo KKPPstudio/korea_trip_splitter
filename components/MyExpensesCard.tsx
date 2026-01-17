@@ -24,17 +24,28 @@ export const MyExpensesCard: React.FC<MyExpensesCardProps> = ({ friends, expense
   const stats = useMemo(() => {
     if (!currentUser || friends.length === 0) return null;
 
-    // 1. Total expenses of the whole group
-    const totalGroupExpense = expenses.reduce((acc, curr) => acc + curr.amount, 0);
+    // 1. My actual share (Sum of parts I need to pay for)
+    let myShare = 0;
 
-    // 2. My fair share (Average)
-    const myShare = totalGroupExpense / friends.length;
+    expenses.forEach(ex => {
+      // Determine who splits this expense
+      const splitTargets = ex.splitBy && ex.splitBy.length > 0 ? ex.splitBy : friends;
 
-    // 3. What I actually paid
+      // If I am one of the splitters
+      if (splitTargets.includes(currentUser)) {
+        const splitCount = splitTargets.length;
+        if (splitCount > 0) {
+          myShare += ex.amount / splitCount;
+        }
+      }
+    });
+
+    // 2. What I actually paid
     const myPaidExpenses = expenses.filter(e => e.payer === currentUser);
     const myTotalPaid = myPaidExpenses.reduce((acc, curr) => acc + curr.amount, 0);
 
-    // 4. Balance (Positive = Receive, Negative = Pay)
+    // 3. Balance (Positive = Receive, Negative = Pay)
+    // Balance = (What I Paid) - (What I Should Pay)
     const balance = myTotalPaid - myShare;
 
     return {
@@ -77,11 +88,10 @@ export const MyExpensesCard: React.FC<MyExpensesCardProps> = ({ friends, expense
       {stats ? (
         <>
           {/* Main Balance Card */}
-          <div className={`rounded-xl shadow-sm border p-6 text-white text-center relative overflow-hidden ${
-            stats.balance >= 0 
-              ? 'bg-gradient-to-br from-green-500 to-emerald-600 border-green-400' 
+          <div className={`rounded-xl shadow-sm border p-6 text-white text-center relative overflow-hidden ${stats.balance >= 0
+              ? 'bg-gradient-to-br from-green-500 to-emerald-600 border-green-400'
               : 'bg-gradient-to-br from-red-500 to-pink-600 border-red-400'
-          }`}>
+            }`}>
             <div className="relative z-10">
               <div className="text-sm font-medium opacity-90 mb-1">
                 {stats.balance >= 0 ? '目前大家要給您' : '目前您需要支付'}
@@ -115,7 +125,7 @@ export const MyExpensesCard: React.FC<MyExpensesCardProps> = ({ friends, expense
               <div className="font-bold text-gray-800 text-lg">
                 {Math.round(stats.myShare).toLocaleString()}
               </div>
-              <div className="text-[10px] text-gray-400">KRW (平均分攤)</div>
+              <div className="text-[10px] text-gray-400">KRW (個人分攤總和)</div>
             </div>
           </div>
 
@@ -132,33 +142,40 @@ export const MyExpensesCard: React.FC<MyExpensesCardProps> = ({ friends, expense
                 </div>
               ) : (
                 stats.myPaidExpenses.map(ex => {
-                   const currency = ex.currency || 'KRW';
-                   const originalAmount = ex.originalAmount || ex.amount;
-                   return (
+                  const currency = ex.currency || 'KRW';
+                  const originalAmount = ex.originalAmount || ex.amount;
+                  return (
                     <div key={ex.id} className="p-3 flex justify-between items-center hover:bg-gray-50 transition-colors">
                       <div>
                         <div className="font-medium text-gray-800 text-sm">{ex.item}</div>
-                        <div className="text-xs text-gray-400">{ex.date}</div>
+                        <div className="text-xs text-gray-400 flex items-center gap-1">
+                          {ex.date}
+                          {ex.splitBy && (
+                            <span title={`分攤: ${ex.splitBy.join(', ')}`}>
+                              | {ex.splitBy.length} 人分攤
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div className="text-right">
                         {currency === 'TWD' ? (
                           <>
-                             <div className="font-bold text-kr-blue text-sm">{originalAmount.toLocaleString()} TWD</div>
-                             <div className="text-[10px] text-gray-400">
+                            <div className="font-bold text-kr-blue text-sm">{originalAmount.toLocaleString()} TWD</div>
+                            <div className="text-[10px] text-gray-400">
                               (計: {ex.amount.toLocaleString()} ₩)
-                             </div>
+                            </div>
                           </>
                         ) : (
                           <>
-                             <div className="font-bold text-kr-blue text-sm">{ex.amount.toLocaleString()} ₩</div>
-                             <div className="text-[10px] text-gray-400">
+                            <div className="font-bold text-kr-blue text-sm">{ex.amount.toLocaleString()} ₩</div>
+                            <div className="text-[10px] text-gray-400">
                               ≈ {Math.round(ex.amount / rate).toLocaleString()} TWD
-                             </div>
+                            </div>
                           </>
                         )}
                       </div>
                     </div>
-                   );
+                  );
                 })
               )}
             </div>

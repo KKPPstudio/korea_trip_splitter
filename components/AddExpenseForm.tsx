@@ -14,6 +14,28 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ friends, rate, o
   const [amount, setAmount] = useState('');
   const [item, setItem] = useState('');
   const [currency, setCurrency] = useState<'KRW' | 'TWD'>('KRW');
+  const [splitBy, setSplitBy] = useState<string[]>([]);
+
+  // Default to all friends when friends list changes
+  React.useEffect(() => {
+    setSplitBy(friends);
+  }, [friends]);
+
+  const toggleSplitFriend = (name: string) => {
+    if (splitBy.includes(name)) {
+      setSplitBy(splitBy.filter(f => f !== name));
+    } else {
+      setSplitBy([...splitBy, name]);
+    }
+  };
+
+  const toggleAllSplit = () => {
+    if (splitBy.length === friends.length) {
+      setSplitBy([]);
+    } else {
+      setSplitBy(friends);
+    }
+  };
 
   const handleSubmit = () => {
     if (!payer) {
@@ -29,6 +51,10 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ friends, rate, o
       onToast('請輸入項目名稱 (例如: 晚餐)');
       return;
     }
+    if (splitBy.length === 0) {
+      onToast('至少要有一人分攤消費');
+      return;
+    }
 
     // Calculate standardized KRW amount
     // If TWD, convert to KRW using current rate. If KRW, keep as is.
@@ -40,10 +66,12 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ friends, rate, o
       originalAmount: numAmount,          // User input
       currency: currency,
       item: item.trim(),
+      splitBy: splitBy.length === friends.length ? undefined : splitBy, // If all, undefined (save space), else specific list
     });
 
     setAmount('');
     setItem('');
+    setSplitBy(friends); // Reset to all
     onToast(`已儲存消費 (${currency})`);
   };
 
@@ -67,61 +95,91 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ friends, rate, o
             ))}
           </select>
         </div>
-        
-        <div className="grid grid-cols-12 gap-3">
-          <div className="col-span-7">
+
+        <div>
+          <div className="flex justify-between items-center mb-1.5">
+            <label className="block text-xs font-medium text-gray-500">誰要分攤？</label>
+            <button
+              onClick={toggleAllSplit}
+              className="text-xs text-kr-blue hover:text-blue-700 font-medium px-1"
+            >
+              {splitBy.length === friends.length ? '取消全選' : '全選'}
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {friends.map(f => {
+              const isSelected = splitBy.includes(f);
+              return (
+                <button
+                  key={f}
+                  onClick={() => toggleSplitFriend(f)}
+                  className={`px-3 py-1.5 rounded-lg text-sm border transition-all flex items-center gap-1 ${isSelected
+                      ? 'bg-green-50 border-green-200 text-green-700 font-medium'
+                      : 'bg-gray-50 border-gray-200 text-gray-400'
+                    }`}
+                >
+                  {f} {isSelected && <Check className="w-3 h-3" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-3">
+          <div className="flex-1 md:w-7/12">
             <label className="flex justify-between items-center text-xs font-medium text-gray-500 mb-1.5">
               金額
               <div className="flex bg-gray-100 rounded p-0.5">
-                <button 
+                <button
                   onClick={() => setCurrency('KRW')}
-                  className={`px-1.5 py-0.5 rounded text-[10px] transition-all ${currency === 'KRW' ? 'bg-white shadow text-blue-600 font-bold' : 'text-gray-400'}`}
+                  className={`px-2 py-0.5 rounded text-[10px] transition-all ${currency === 'KRW' ? 'bg-white shadow-sm text-blue-600 font-bold' : 'text-gray-400 hover:text-gray-600'}`}
                 >
                   KRW
                 </button>
-                <button 
+                <button
                   onClick={() => setCurrency('TWD')}
-                  className={`px-1.5 py-0.5 rounded text-[10px] transition-all ${currency === 'TWD' ? 'bg-white shadow text-blue-600 font-bold' : 'text-gray-400'}`}
+                  className={`px-2 py-0.5 rounded text-[10px] transition-all ${currency === 'TWD' ? 'bg-white shadow-sm text-blue-600 font-bold' : 'text-gray-400 hover:text-gray-600'}`}
                 >
                   TWD
                 </button>
               </div>
             </label>
-            <div className="relative">
+            <div className="relative group">
               <input
                 type="number"
+                inputMode="decimal"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder={currency === 'KRW' ? "₩ 0" : "$ 0"}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-kr-blue/20 focus:border-kr-blue transition-all font-bold text-gray-700 placeholder-gray-300"
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 pointer-events-none group-focus-within:text-kr-blue transition-colors">
                 {currency}
               </div>
             </div>
           </div>
-          <div className="col-span-5">
+          <div className="flex-1 md:w-5/12">
             <label className="block text-xs font-medium text-gray-500 mb-1.5">項目</label>
             <input
               type="text"
               value={item}
               onChange={(e) => setItem(e.target.value)}
-              placeholder="例: 烤肉"
-              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+              placeholder="例: 烤肉、計程車"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-kr-blue/20 focus:border-kr-blue transition-all placeholder-gray-300"
             />
           </div>
         </div>
 
         {/* Currency Conversion Preview */}
         {amount && (
-           <div className="text-xs text-gray-400 text-right flex items-center justify-end gap-1">
-             <ArrowRightLeft className="w-3 h-3" />
-             {currency === 'TWD' ? (
-                <span>約 {Math.round(parseFloat(amount) * rate).toLocaleString()} KRW (以匯率 {rate} 計算)</span>
-             ) : (
-                <span>約 {Math.round(parseFloat(amount) / rate).toLocaleString()} TWD</span>
-             )}
-           </div>
+          <div className="text-xs text-gray-400 text-right flex items-center justify-end gap-1">
+            <ArrowRightLeft className="w-3 h-3" />
+            {currency === 'TWD' ? (
+              <span>約 {Math.round(parseFloat(amount) * rate).toLocaleString()} KRW (以匯率 {rate} 計算)</span>
+            ) : (
+              <span>約 {Math.round(parseFloat(amount) / rate).toLocaleString()} TWD</span>
+            )}
+          </div>
         )}
 
         <button

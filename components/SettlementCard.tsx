@@ -18,16 +18,34 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ friends, expense
     let total = 0;
 
     expenses.forEach(ex => {
-      // Logic correction: Initialize if undefined (though should be handled by friends list)
+      // Initialize if needed (defense against data inconsistency)
       if (balance[ex.payer] === undefined) balance[ex.payer] = 0;
-      balance[ex.payer] += ex.amount;
+
+      // Calculate split
+      const splitTargets = ex.splitBy && ex.splitBy.length > 0 ? ex.splitBy : friends;
+      const splitCount = splitTargets.length;
+
+      if (splitCount > 0) {
+        const splitAmount = ex.amount / splitCount;
+
+        // Add debt to splitters
+        splitTargets.forEach(target => {
+          if (balance[target] === undefined) balance[target] = 0;
+          balance[target] -= splitAmount; // They owe this amount
+        });
+
+        // Add credit to payer
+        balance[ex.payer] += ex.amount; // They paid the full amount
+      }
+
       total += ex.amount;
     });
 
-    const average = total / friends.length;
+    const average = total / friends.length; // Kept for display purposes ("Average spending per person")
+
     const details: BalanceDetail[] = friends.map(f => ({
       name: f,
-      val: balance[f] - average
+      val: balance[f] // Net balance for settlement
     }));
 
     const debtors = details.filter(d => d.val < -1).sort((a, b) => a.val - b.val);
@@ -46,7 +64,7 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ friends, expense
       const creditor = cClone[j];
 
       const amount = Math.min(Math.abs(debtor.val), creditor.val);
-      
+
       if (amount > 0) {
         transfers.push({
           from: debtor.name,
@@ -105,19 +123,12 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ friends, expense
       <div className="bg-gradient-to-r from-kr-blue to-blue-500 text-white p-4 font-bold flex items-center gap-2">
         <Calculator className="w-5 h-5" /> 最終結帳 (自動更新)
       </div>
-      
+
       <div className="p-4 bg-blue-50">
-        <div className="flex bg-white rounded-lg shadow-sm border border-blue-100 overflow-hidden">
-          <div className="flex-1 p-3 text-center border-r border-blue-100">
-            <div className="text-xs text-gray-500 mb-1">總花費</div>
-            <div className="font-bold text-gray-800">{Math.round(total).toLocaleString()} ₩</div>
-            <div className="text-[10px] text-gray-400">≈ {twdTotal.toLocaleString()} TWD</div>
-          </div>
-          <div className="flex-1 p-3 text-center">
-            <div className="text-xs text-gray-500 mb-1">每人應付</div>
-            <div className="font-bold text-gray-800">{Math.round(average).toLocaleString()} ₩</div>
-            <div className="text-[10px] text-gray-400">≈ {twdAvg.toLocaleString()} TWD</div>
-          </div>
+        <div className="bg-white rounded-lg shadow-sm border border-blue-100 overflow-hidden p-4 text-center">
+          <div className="text-xs text-gray-500 mb-1">總花費</div>
+          <div className="font-bold text-gray-800 text-xl">{Math.round(total).toLocaleString()} ₩</div>
+          <div className="text-xs text-gray-400">≈ {twdTotal.toLocaleString()} TWD</div>
         </div>
       </div>
 

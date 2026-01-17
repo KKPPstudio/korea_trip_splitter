@@ -17,8 +17,8 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, rate, onDele
 
   const sortedExpenses = [...expenses].sort((a, b) => {
     // 按字串比較日期 (格式為 MM/DD HH:mm，字串比較在同年份內有效)
-    return sortOrder === 'desc' 
-      ? b.date.localeCompare(a.date) 
+    return sortOrder === 'desc'
+      ? b.date.localeCompare(a.date)
       : a.date.localeCompare(b.date);
   });
 
@@ -45,7 +45,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, rate, onDele
           <div className="text-[10px] text-gray-400">≈ {Math.round(total / rate).toLocaleString()} TWD</div>
         </div>
       </div>
-      
+
       <div className="bg-gray-50 p-2 max-h-[400px] overflow-y-auto custom-scrollbar">
         {sortedExpenses.length === 0 ? (
           <div className="text-center text-gray-400 py-8 text-sm">
@@ -57,45 +57,58 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, rate, onDele
               // Fallback for old data that might not have currency set
               const currency = ex.currency || 'KRW';
               const originalAmount = ex.originalAmount || ex.amount;
-              
+
               return (
-                <div key={ex.id} className="bg-white p-3 rounded-lg border-l-4 border-kr-blue shadow-sm hover:translate-x-0.5 transition-transform flex justify-between items-center group relative overflow-hidden">
-                  <div className="flex-1">
-                    <div className="font-bold text-gray-800 text-sm">{ex.item}</div>
-                    <div className="text-xs text-gray-500 mt-0.5">
-                      <span className="text-kr-blue font-medium">{ex.payer}</span> 先付 • {ex.date}
+                <div key={ex.id} className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex justify-between items-center group">
+                  <div className="flex-1 min-w-0 pr-2">
+                    <div className="font-bold text-gray-800 text-sm truncate">{ex.item}</div>
+                    <div className="text-xs text-gray-500 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-kr-blue shrink-0"></span>
+                      <span className="text-kr-blue font-medium">{ex.payer}</span>
+                      <span className="text-gray-300">|</span>
+                      {ex.date}
+                      {ex.splitBy && (
+                        <>
+                          <span className="text-gray-300">|</span>
+                          <span className="text-gray-400" title={`分攤: ${ex.splitBy.join(', ')}`}>
+                            {ex.splitBy.length} 人分攤
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
-                  <div className="text-right mr-8 group-hover:mr-16 transition-all duration-300">
-                    {currency === 'TWD' ? (
-                      <>
-                         <div className="text-gray-800 font-bold text-sm">{originalAmount.toLocaleString()} TWD</div>
-                         <div className="text-[10px] text-gray-400">換算: {ex.amount.toLocaleString()} KRW</div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="text-kr-red font-bold text-sm">{ex.amount.toLocaleString()} ₩</div>
-                        <div className="text-[10px] text-gray-400">≈ {Math.round(ex.amount / rate).toLocaleString()} TWD</div>
-                      </>
-                    )}
-                  </div>
-                  
-                  {/* Actions */}
-                  <div className="absolute right-0 top-0 bottom-0 flex transform translate-x-full group-hover:translate-x-0 transition-transform duration-200">
-                    <button 
-                      onClick={() => onEdit(ex)}
-                      className="w-10 bg-blue-50 text-blue-500 flex items-center justify-center border-l border-blue-100 hover:bg-blue-100"
-                      aria-label="編輯"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                    <button 
-                      onClick={() => onDelete(ex.id)}
-                      className="w-10 bg-red-50 text-red-500 flex items-center justify-center border-l border-red-100 hover:bg-red-100"
-                      aria-label="刪除"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="text-right">
+                      {currency === 'TWD' ? (
+                        <>
+                          <div className="text-gray-800 font-bold text-sm tracking-tight">{originalAmount.toLocaleString()} <span className="text-xs font-normal text-gray-400">TWD</span></div>
+                          <div className="text-[10px] text-gray-400">≈ {ex.amount.toLocaleString()} ₩</div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-kr-red font-bold text-sm tracking-tight">{ex.amount.toLocaleString()} <span className="text-xs font-normal text-gray-400">₩</span></div>
+                          <div className="text-[10px] text-gray-400">≈ {Math.round(ex.amount / rate).toLocaleString()} TWD</div>
+                        </>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1 border-l border-gray-100 pl-2">
+                      <button
+                        onClick={() => onEdit(ex)}
+                        className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                        aria-label="編輯"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => onDelete(ex.id)}
+                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        aria-label="刪除"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -103,7 +116,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, rate, onDele
           </div>
         )}
       </div>
-      
+
       {expenses.length > 0 && (
         <div className="px-4 py-3 bg-white border-t border-gray-100 text-right">
           <button

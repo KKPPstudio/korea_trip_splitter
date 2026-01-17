@@ -78,9 +78,19 @@ export const PayerSummaryCard: React.FC<PayerSummaryCardProps> = ({ expenses, ra
                     <div className="text-xs text-gray-400 pl-1 mb-1">該成員的消費明細 (可點擊編輯):</div>
                     {payerExpenses.map(ex => (
                       <div key={ex.id} className="flex justify-between items-center bg-white p-2 rounded border border-gray-100 text-sm">
-                        <div className="flex-1">
-                          <div className="font-medium text-gray-700">{ex.item}</div>
-                          <div className="text-[10px] text-gray-400">{ex.date}</div>
+                        <div className="flex-1 min-w-0 pr-2">
+                          <div className="font-medium text-gray-700 truncate">{ex.item}</div>
+                          <div className="text-[10px] text-gray-400 flex items-center gap-1">
+                            {ex.date}
+                            {ex.splitBy && (
+                              <>
+                                <span>|</span>
+                                <span title={`分攤: ${ex.splitBy.join(', ')}`}>
+                                  {ex.splitBy.length} 人分攤
+                                </span>
+                              </>
+                            )}
+                          </div>
                         </div>
                         <div className="flex items-center gap-3">
                           <span className="font-medium text-orange-600">{ex.amount.toLocaleString()} ₩</span>
